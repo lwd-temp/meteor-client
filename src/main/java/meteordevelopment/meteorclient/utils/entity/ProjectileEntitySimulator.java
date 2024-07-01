@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.mixin.ProjectileInGroundAccessor;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.MissHitResult;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.*;
 import net.minecraft.entity.projectile.thrown.*;
@@ -36,6 +37,9 @@ public class ProjectileEntitySimulator {
     private double gravity;
     private double airDrag, waterDrag;
 
+
+    // held items
+
     public boolean set(Entity user, ItemStack itemStack, double simulated, boolean accurate, double tickDelta) {
         Item item = itemStack.getItem();
 
@@ -47,10 +51,10 @@ public class ProjectileEntitySimulator {
         }
         else if (item instanceof CrossbowItem) {
             if (!CrossbowItem.isCharged(itemStack)) return false;
-            if (CrossbowItem.hasProjectile(itemStack, Items.FIREWORK_ROCKET)) {
-                set(user, 0, CrossbowItemAccessor.getSpeed(itemStack), simulated, 0, 0.6, accurate, tickDelta);
+            if (itemStack.get(DataComponentTypes.CHARGED_PROJECTILES).contains(Items.FIREWORK_ROCKET)) {
+                set(user, 0, CrossbowItemAccessor.getSpeed(itemStack.get(DataComponentTypes.CHARGED_PROJECTILES)), simulated, 0, 0.6, accurate, tickDelta);
             }
-            else set(user, 0, CrossbowItemAccessor.getSpeed(itemStack), simulated, 0.05, 0.6, accurate, tickDelta);
+            else set(user, 0, CrossbowItemAccessor.getSpeed(itemStack.get(DataComponentTypes.CHARGED_PROJECTILES)), simulated, 0.05, 0.6, accurate, tickDelta);
         }
         else if (item instanceof FishingRodItem) {
             setFishingBobber(user, tickDelta);
@@ -66,6 +70,10 @@ public class ProjectileEntitySimulator {
         }
         else if (item instanceof ThrowablePotionItem) {
             set(user, -20, 0.5, simulated, 0.05, 0.8, accurate, tickDelta);
+        }
+        else if (item instanceof WindChargeItem) {
+            set(user, 0, 1.5, simulated, 0, 1.0, accurate, tickDelta);
+            this.airDrag = 1.0;
         }
         else {
             return false;
@@ -110,6 +118,9 @@ public class ProjectileEntitySimulator {
         this.airDrag = 0.99;
         this.waterDrag = waterDrag;
     }
+
+
+    // fired projectiles
 
     public boolean set(Entity entity, boolean accurate) {
         // skip entities in ground
